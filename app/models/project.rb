@@ -3,6 +3,7 @@ class Project < ApplicationRecord
 
   has_many :project_allocations, dependent: :destroy
   has_many :users, through: :project_allocations
+  has_many :worklogs, dependent: :destroy
 
   validates :name, presence: true
   validates :status, inclusion: { in: STATUSES }, allow_nil: true
