@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_07_110843) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_07_111150) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -87,6 +87,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_07_110843) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  create_table "worklog_drafts", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.decimal "hours", precision: 4, scale: 2, default: "0.0", null: false
+    t.string "origin", default: "deterministic", null: false
+    t.bigint "project_id", null: false
+    t.jsonb "source_refs", default: [], null: false
+    t.string "status", default: "suggested", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.date "work_date", null: false
+    t.index ["project_id"], name: "index_worklog_drafts_on_project_id"
+    t.index ["user_id", "project_id", "work_date", "status"], name: "idx_on_user_id_project_id_work_date_status_345b2e02a2"
+    t.index ["user_id", "work_date"], name: "index_worklog_drafts_on_user_id_and_work_date"
+    t.index ["user_id"], name: "index_worklog_drafts_on_user_id"
+  end
+
   create_table "worklogs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "description", null: false
@@ -106,6 +123,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_07_110843) do
   add_foreign_key "project_allocations", "projects"
   add_foreign_key "project_allocations", "users"
   add_foreign_key "project_repositories", "projects"
+  add_foreign_key "worklog_drafts", "projects"
+  add_foreign_key "worklog_drafts", "users"
   add_foreign_key "worklogs", "projects"
   add_foreign_key "worklogs", "users"
 end
