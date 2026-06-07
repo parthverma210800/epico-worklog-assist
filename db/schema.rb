@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_07_110427) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_07_110645) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -20,6 +20,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_07_110427) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["holiday_date"], name: "index_holidays_on_holiday_date", unique: true
+  end
+
+  create_table "integration_connections", force: :cascade do |t|
+    t.text "access_token"
+    t.datetime "connected_at"
+    t.datetime "created_at", null: false
+    t.string "provider", null: false
+    t.string "scopes"
+    t.string "status", default: "connected", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "provider"], name: "index_integration_connections_on_user_id_and_provider", unique: true
+    t.index ["user_id"], name: "index_integration_connections_on_user_id"
   end
 
   create_table "leaves", force: :cascade do |t|
@@ -78,6 +91,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_07_110427) do
     t.index ["user_id"], name: "index_worklogs_on_user_id"
   end
 
+  add_foreign_key "integration_connections", "users"
   add_foreign_key "leaves", "users"
   add_foreign_key "project_allocations", "projects"
   add_foreign_key "project_allocations", "users"
