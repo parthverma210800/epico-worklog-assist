@@ -10,9 +10,17 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_07_105708) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_07_110224) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "holidays", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "holiday_date", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["holiday_date"], name: "index_holidays_on_holiday_date", unique: true
+  end
 
   create_table "leaves", force: :cascade do |t|
     t.datetime "created_at", null: false
