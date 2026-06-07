@@ -10,9 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_07_105148) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_07_105708) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "leaves", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "leave_date", null: false
+    t.string "leave_type", default: "full_day", null: false
+    t.string "status", default: "approved", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "leave_date"], name: "index_leaves_on_user_id_and_leave_date"
+    t.index ["user_id"], name: "index_leaves_on_user_id"
+  end
 
   create_table "project_allocations", force: :cascade do |t|
     t.boolean "active", default: true, null: false
@@ -45,6 +56,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_07_105148) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "leaves", "users"
   add_foreign_key "project_allocations", "projects"
   add_foreign_key "project_allocations", "users"
 end
