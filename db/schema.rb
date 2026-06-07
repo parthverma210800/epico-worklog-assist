@@ -10,9 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_07_104519) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_07_105148) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "project_allocations", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.integer "daily_hours", default: 8, null: false
+    t.bigint "project_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["project_id"], name: "index_project_allocations_on_project_id"
+    t.index ["user_id", "project_id"], name: "index_project_allocations_on_user_id_and_project_id", unique: true
+    t.index ["user_id"], name: "index_project_allocations_on_user_id"
+  end
 
   create_table "projects", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -32,4 +44,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_07_104519) do
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
   end
+
+  add_foreign_key "project_allocations", "projects"
+  add_foreign_key "project_allocations", "users"
 end
