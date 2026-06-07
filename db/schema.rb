@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_07_111150) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_07_112538) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -50,7 +50,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_07_111150) do
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
     t.integer "daily_hours", default: 8, null: false
+    t.date "end_date"
     t.bigint "project_id", null: false
+    t.date "start_date"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["project_id"], name: "index_project_allocations_on_project_id"

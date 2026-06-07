@@ -23,8 +23,9 @@ mocingbird = Project.create!(
   end_date: Date.new(2026, 12, 31)
 )
 
-puts "Allocating Employee1 to Mocingbird (8h/day)..."
-ProjectAllocation.create!(user: employee1, project: mocingbird, daily_hours: 8, active: true)
+puts "Allocating Employee1 to Mocingbird (8h/day, since Jan 2026)..."
+ProjectAllocation.create!(user: employee1, project: mocingbird, daily_hours: 8,
+                          active: true, start_date: Date.new(2026, 1, 1))
 
 puts "Mapping GitHub repos -> Mocingbird..."
 %w[org/epp org/mocingbird].each do |repo|
