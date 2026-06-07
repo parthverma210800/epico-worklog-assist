@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_07_110645) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_07_110843) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -58,6 +58,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_07_110645) do
     t.index ["user_id"], name: "index_project_allocations_on_user_id"
   end
 
+  create_table "project_repositories", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "project_id", null: false
+    t.string "provider", default: "github", null: false
+    t.string "repo_full_name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["project_id"], name: "index_project_repositories_on_project_id"
+    t.index ["provider", "repo_full_name"], name: "index_project_repositories_on_provider_and_repo_full_name", unique: true
+  end
+
   create_table "projects", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "description"
@@ -95,6 +105,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_07_110645) do
   add_foreign_key "leaves", "users"
   add_foreign_key "project_allocations", "projects"
   add_foreign_key "project_allocations", "users"
+  add_foreign_key "project_repositories", "projects"
   add_foreign_key "worklogs", "projects"
   add_foreign_key "worklogs", "users"
 end
