@@ -1,0 +1,35 @@
+# Rails / Ruby
+/.bundle
+/log/*
+/tmp/*
+!/log/.keep
+!/tmp/.keep
+/storage/*
+!/storage/.keep
+/public/assets
+/config/master.key
+/config/credentials/*.key
+.env
+.env.*
+!.env.example
+
+# Dependencies
+/vendor/bundle
+node_modules/
+
+# Test / coverage
+/coverage
+/spec/examples.txt
+/spec/vcr_cassettes/*.local.yml
+
+# OS / editor
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+*~
+
+# Ignore key files for decrypting credentials and more.
+/config/*.key
+
