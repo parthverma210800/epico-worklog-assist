@@ -11,6 +11,10 @@ Rails.application.routes.draw do
         member { post :accept }
       end
       post "worklogs/auto_draft", to: "auto_drafts#create"
+
+      get "integrations", to: "integration_connections#index"
+      post "integrations", to: "integration_connections#create"
+      delete "integrations/:provider", to: "integration_connections#destroy"
     end
   end
 end

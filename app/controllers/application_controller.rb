@@ -1,6 +1,7 @@
 class ApplicationController < ActionController::API
   rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
   rescue_from ActiveRecord::RecordInvalid, with: :render_unprocessable
+  rescue_from ActionController::ParameterMissing, with: :render_bad_request
 
   private
 
@@ -22,6 +23,10 @@ class ApplicationController < ActionController::API
 
   def render_not_found(error)
     render_error(code: "not_found", message: error.message, status: :not_found)
+  end
+
+  def render_bad_request(error)
+    render_error(code: "bad_request", message: error.message, status: :bad_request)
   end
 
   def render_unprocessable(error)
