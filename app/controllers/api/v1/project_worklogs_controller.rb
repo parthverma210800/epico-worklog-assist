@@ -2,6 +2,7 @@ module Api
   module V1
     class ProjectWorklogsController < ApplicationController
       include SerializesWorklogDrafts
+      before_action :authenticate_user!
 
       # POST /api/v1/projects/:project_id/worklogs/compose  body: { date, hours? }
       # The "Auto-Draft" button on a project's Add Worklog form: composes a draft

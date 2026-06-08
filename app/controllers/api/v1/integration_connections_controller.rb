@@ -7,6 +7,8 @@ module Api
     # Epico, GitHub would use the OAuth redirect flow and store the resulting
     # token here the same way.
     class IntegrationConnectionsController < ApplicationController
+      before_action :authenticate_user!, except: :verify
+
       # GET /api/v1/integrations
       def index
         render_data(current_user.integration_connections.map { |c| serialize(c) })

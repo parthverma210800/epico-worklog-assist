@@ -2,6 +2,7 @@ module Api
   module V1
     class WorklogDraftsController < ApplicationController
       include SerializesWorklogDrafts
+      before_action :authenticate_user!
 
       # GET /api/v1/worklog_drafts — the current user's pending (suggested) drafts.
       def index

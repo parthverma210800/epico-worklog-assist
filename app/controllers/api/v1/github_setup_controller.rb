@@ -1,6 +1,8 @@
 module Api
   module V1
     class GithubSetupController < ApplicationController
+      before_action :authenticate_user!
+
       # POST /api/v1/github/setup  body: { access_token, repos: [full_name, ...] }
       # Stores the token and turns the selected repos into projects the user is
       # allocated to (Project + ProjectRepository + ProjectAllocation).

@@ -7,10 +7,40 @@ class ApplicationController < ActionController::API
 
   private
 
-  # Prototype auth shim: resolve the user from a header, else fall back to the
-  # first seeded user. Epico replaces this with its real authentication.
+  # Resolve the current user from the Epico Bearer JWT (Authorization header).
+  # The token carries `sub` (email) + `uuid` (resourceId); we match an existing
+  # user by email and verify/backfill their Epico resource id.
   def current_user
-    @current_user ||= User.find_by(id: request.headers["X-User-Id"]) || User.first
+    return @current_user if defined?(@current_user)
+
+    @current_user = resolve_current_user
+  end
+
+  def resolve_current_user
+    claims = Auth::EpicoToken.decode(request.headers["Authorization"])
+    user = User.find_by(email: claims.email)
+    return (@auth_error = "no user for #{claims.email}") && nil unless user
+
+    if user.epico_user_id.nil?
+      user.update_column(:epico_user_id, claims.resource_id)
+    elsif user.epico_user_id != claims.resource_id
+      return (@auth_error = "token identity mismatch") && nil
+    end
+    user
+  rescue Auth::EpicoToken::InvalidToken => e
+    @auth_error = e.message
+    nil
+  end
+
+  # before_action for endpoints that act on a user.
+  def authenticate_user!
+    return if current_user
+
+    render_unauthorized(@auth_error || "authentication required")
+  end
+
+  def render_unauthorized(message)
+    render_error(code: "unauthorized", message: message, status: :unauthorized)
   end
 
   def render_data(data, meta: {}, status: :ok)

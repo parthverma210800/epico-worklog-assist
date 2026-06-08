@@ -42,6 +42,9 @@
     <h2>Add Worklog</h2>
     <div class="sub">Local test UI · talks to the prototype API on this origin</div>
 
+    <label>Epico auth token (Bearer) — stands in for the Epico login</label>
+    <input id="authToken" type="text" placeholder="Paste your Epico bearer token (eyJ...)" />
+
     <label>Select date for work log *</label>
     <input id="date" type="date" />
 
@@ -85,7 +88,12 @@
   <script>
     const $ = (id) => document.getElementById(id);
     $("date").value = new Date().toISOString().slice(0, 10);
-    const headers = () => ({ "Content-Type": "application/json" });
+    const headers = () => {
+      const h = { "Content-Type": "application/json" };
+      const t = $("authToken").value.trim();
+      if (t) h["Authorization"] = t.toLowerCase().startsWith("bearer") ? t : ("Bearer " + t);
+      return h;
+    };
 
     $("autoLogBtn").onclick = () => $("overlay").classList.add("show");
     $("closeBtn").onclick = () => $("overlay").classList.remove("show");
@@ -133,21 +141,30 @@
 
     $("submitBtn").onclick = async () => {
       const out = $("submitMsg"); out.textContent = "Submitting…"; out.className = "msg";
-      const results = [];
+      const created = [], errors = [];
+      let selectedAny = false;
       for (const wrap of document.querySelectorAll(".token-block")) {
         const token = wrap.dataset.token;
         const repos = [...wrap.querySelectorAll('input[type=checkbox]:checked')].map((c) => c.value);
         if (!token || !repos.length) continue;
-        const res = await fetch("/api/v1/github/setup", {
-          method: "POST", headers: headers(), body: JSON.stringify({ access_token: token, repos }),
-        });
-        const json = await res.json();
-        if (res.ok) results.push(...json.data.map((p) => p.name));
+        selectedAny = true;
+        try {
+          const res = await fetch("/api/v1/github/setup", {
+            method: "POST", headers: headers(), body: JSON.stringify({ access_token: token, repos }),
+          });
+          const json = await res.json();
+          if (res.ok) created.push(...json.data.map((p) => p.name));
+          else errors.push((json.error && json.error.message) || ("HTTP " + res.status));
+        } catch (e) { errors.push(e.message); }
       }
-      out.className = "msg ok";
-      out.textContent = results.length
-        ? `Done — created/allocated projects: ${results.join(", ")}`
-        : "Nothing submitted — verify a token and check at least one repo.";
+      if (created.length) {
+        out.className = "msg ok"; out.textContent = `Done — created/allocated projects: ${created.join(", ")}`;
+      } else if (errors.length) {
+        out.className = "msg err"; out.textContent = "Failed: " + errors.join("; ");
+      } else {
+        out.className = "msg err";
+        out.textContent = selectedAny ? "Submit failed." : "Verify a token and check at least one repo.";
+      }
     };
   </script>
 </body>
