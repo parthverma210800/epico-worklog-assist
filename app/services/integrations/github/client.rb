@@ -41,6 +41,14 @@ module Integrations
           .map { |repo| repo["full_name"] }
       end
 
+      # The date a repo was created on GitHub, or nil if it can't be read.
+      def repository_created_on(full_name)
+        created = get_json("/repos/#{full_name}")["created_at"]
+        created && Date.parse(created)
+      rescue AuthError, RequestError
+        nil
+      end
+
       # PRs the user authored in a date range (used by the branch-aware fetch).
       def pull_requests(from:, to:)
         search_pull_requests(login, from, to)
