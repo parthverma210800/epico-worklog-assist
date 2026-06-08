@@ -11,7 +11,7 @@ module Worklogs
   #
   #   Worklogs::ComposeForDay.call(user:, project:, date: Date.new(2026,6,8), hours: 8)
   class ComposeForDay
-    def self.call(user:, project:, date:, hours: nil, github_client: nil, llm: Llm.default)
+    def self.call(user:, project:, date:, hours: nil, github_client: nil, llm: Llm::Client.new)
       new(user:, project:, date:, hours:, github_client:, llm:).call
     end
 

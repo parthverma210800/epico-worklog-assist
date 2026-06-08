@@ -12,7 +12,7 @@ module Worklogs
   #
   #   Worklogs::AutoDrafter.call(user:, year: 2026, month: 6)
   class AutoDrafter
-    def self.call(user:, year:, month:, today: Date.current, github_client: nil, llm: Llm.default)
+    def self.call(user:, year:, month:, today: Date.current, github_client: nil, llm: Llm::Client.new)
       new(user:, year:, month:, today:, github_client:, llm:).call
     end
 
