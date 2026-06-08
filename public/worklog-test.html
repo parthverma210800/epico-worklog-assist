@@ -42,11 +42,6 @@
     <h2>Add Worklog</h2>
     <div class="sub">Local test UI · talks to the prototype API on this origin</div>
 
-    <div class="row" style="justify-content:flex-end;">
-      <label style="margin:0;">User ID</label>
-      <input class="userid" id="userId" type="number" value="7" />
-    </div>
-
     <label>Select date for work log *</label>
     <input id="date" type="date" />
 
@@ -90,7 +85,7 @@
   <script>
     const $ = (id) => document.getElementById(id);
     $("date").value = new Date().toISOString().slice(0, 10);
-    const headers = () => ({ "Content-Type": "application/json", "X-User-Id": $("userId").value });
+    const headers = () => ({ "Content-Type": "application/json" });
 
     $("autoLogBtn").onclick = () => $("overlay").classList.add("show");
     $("closeBtn").onclick = () => $("overlay").classList.remove("show");
