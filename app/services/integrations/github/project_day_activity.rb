@@ -42,7 +42,7 @@ module Integrations
       # Story-pattern branches first (so their commits win the dedupe), capped.
       def prioritized_branches(repo)
         names = @client.branches(repo).map { |b| b[:name] }
-        story, other = names.partition { |name| name.match?(STORY_PATTERN) }
+        story, other = names.partition { |name| name.match?(Activity::STORY_PATTERN) }
         (story + other).first(MAX_BRANCHES)
       end
     end

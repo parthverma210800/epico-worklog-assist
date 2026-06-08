@@ -47,7 +47,10 @@ module Worklogs
 
     def user_prompt
       lines = ["Project: #{@group.project.name}", "Date: #{@group.date}", "", "GitHub activity:"]
-      @group.activities.each { |a| lines << "- [#{a.kind}] #{a.ref} — #{a.title}" }
+      @group.activities.each do |a|
+        tag = a.story ? "#{a.kind} · #{a.story}" : a.kind.to_s
+        lines << "- [#{tag}] #{a.ref} — #{a.title}"
+      end
 
       if @rough_notes.present?
         lines += ["", "Engineer's rough notes (incorporate these):", @rough_notes]

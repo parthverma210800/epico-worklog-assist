@@ -25,11 +25,17 @@ module Worklogs
     end
 
     def call
-      group = ActivityFetcher
-              .call(user: @user, from: @date, to: @date, client: @github_client)
-              .find { |g| g.project.id == @project.id }
-      return nil if group.nil? || group.activities.empty?
+      return nil unless client
 
+      repos = @project.project_repositories.pluck(:repo_full_name)
+      return nil if repos.empty?
+
+      activities = Integrations::Github::ProjectDayActivity.call(
+        client: client, login: client.login, repos: repos, date: @date
+      )
+      return nil if activities.empty?
+
+      group = ActivityFetcher::Group.new(project: @project, date: @date, activities: activities)
       draft = AiComposer.call(
         group: group,
         hours: resolved_hours,
@@ -40,6 +46,17 @@ module Worklogs
     end
 
     private
+
+    def client
+      @client ||= @github_client || build_client_from_connection
+    end
+
+    def build_client_from_connection
+      connection = @user.integration_connections.find_by(provider: "github", status: "connected")
+      return nil unless connection
+
+      Integrations::Github::Client.new(token: connection.access_token)
+    end
 
     def resolved_hours
       @hours || @user.project_allocations.find_by(project: @project)&.daily_hours || 8
