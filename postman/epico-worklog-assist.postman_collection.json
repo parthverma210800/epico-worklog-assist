@@ -1,150 +1,129 @@
 {
   "info": {
     "name": "Epico Worklog Assist",
-    "description": "Smart Worklog Assist prototype API. Folders map to controllers.\n\nSet the collection variables:\n- base_url: your local Rails server (default http://127.0.0.1:3001)\n- user_id: value sent as the X-User-Id header (prototype auth shim)\n- draft_id: a WorklogDraft id, used by Accept Draft\n\nTypical flow: Connect GitHub -> Generate Auto Drafts -> List Drafts -> Accept Draft.",
+    "description": "Smart Worklog Assist prototype API.\n\nAuth: every request sends the Epico JWT in the Authorization header (Bearer), via collection-level auth. Set the collection variables:\n- base_url: your local Rails server (default http://127.0.0.1:3001)\n- bearer_token: your Epico JWT (the 'eyJ...' value; no 'Bearer ' prefix)\n- project_id: a project id (for Compose)\n- draft_id: a WorklogDraft id (for Accept)\n\nTypical flow: Verify GitHub Token -> Setup repos -> Compose -> List/Accept drafts.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{bearer_token}}", "type": "string" }]
   },
   "variable": [
     { "key": "base_url", "value": "http://127.0.0.1:3001" },
-    { "key": "user_id", "value": "1" },
+    { "key": "bearer_token", "value": "" },
+    { "key": "project_id", "value": "1" },
     { "key": "draft_id", "value": "1" }
   ],
   "item": [
     {
       "name": "Integration Connections",
-      "description": "Api::V1::IntegrationConnectionsController — per-user GitHub/Shortcut account connections. The access token is stored encrypted and never returned.",
+      "description": "Per-user GitHub/Shortcut connections. Token stored encrypted, never returned.",
       "item": [
+        {
+          "name": "Verify GitHub Token (no auth required)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"access_token\": \"ghp_replace_with_a_real_pat\"\n}" },
+            "url": {
+              "raw": "{{base_url}}/api/v1/integrations/github/verify",
+              "host": ["{{base_url}}"], "path": ["api", "v1", "integrations", "github", "verify"]
+            },
+            "description": "Validates a GitHub token (no Epico auth needed) and lists its repos."
+          }
+        },
         {
           "name": "List Integrations",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "X-User-Id", "value": "{{user_id}}" }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/integrations",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "integrations"]
+              "host": ["{{base_url}}"], "path": ["api", "v1", "integrations"]
             },
-            "description": "Lists the current user's connected providers (no token in response)."
+            "description": "Current user's connected providers (Authorization: Bearer from collection auth)."
           }
         },
         {
           "name": "Connect GitHub",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "X-User-Id", "value": "{{user_id}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"provider\": \"github\",\n  \"access_token\": \"ghp_replace_with_a_real_pat\",\n  \"scopes\": \"repo\"\n}"
-            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"provider\": \"github\",\n  \"access_token\": \"ghp_replace_with_a_real_pat\",\n  \"scopes\": \"repo\"\n}" },
             "url": {
               "raw": "{{base_url}}/api/v1/integrations",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "integrations"]
-            },
-            "description": "Connect (or update) the current user's GitHub account by token (PAT). 201 on success; unknown provider -> 422; missing field -> 400."
+              "host": ["{{base_url}}"], "path": ["api", "v1", "integrations"]
+            }
           }
         },
         {
-          "name": "Connect Shortcut",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "X-User-Id", "value": "{{user_id}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"provider\": \"shortcut\",\n  \"access_token\": \"replace_with_shortcut_token\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/v1/integrations",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "integrations"]
-            },
-            "description": "Connect the current user's Shortcut account by API token."
-          }
-        },
-        {
-          "name": "Disconnect (provider)",
+          "name": "Disconnect GitHub",
           "request": {
             "method": "DELETE",
-            "header": [
-              { "key": "X-User-Id", "value": "{{user_id}}" }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/integrations/github",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "integrations", "github"]
-            },
-            "description": "Disconnect a provider (deletes the stored token). 204 on success, 404 if not connected. Change the last path segment to 'shortcut' to disconnect Shortcut."
+              "host": ["{{base_url}}"], "path": ["api", "v1", "integrations", "github"]
+            }
           }
         }
       ]
     },
     {
-      "name": "Auto Drafts",
-      "description": "Api::V1::AutoDraftsController — generate worklog drafts from the current user's connected GitHub activity for a given month.",
+      "name": "GitHub Setup",
       "item": [
         {
-          "name": "Generate Auto Drafts",
+          "name": "Setup repos -> projects + allocations",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "X-User-Id", "value": "{{user_id}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"year\": 2026,\n  \"month\": 6\n}"
-            },
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"access_token\": \"ghp_replace_with_a_real_pat\",\n  \"repos\": [\"owner/repo-1\", \"owner/repo-2\"]\n}" },
             "url": {
-              "raw": "{{base_url}}/api/v1/worklogs/auto_draft",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "worklogs", "auto_draft"]
+              "raw": "{{base_url}}/api/v1/github/setup",
+              "host": ["{{base_url}}"], "path": ["api", "v1", "github", "setup"]
             },
-            "description": "Drafts the current user's missing days that month from their GitHub activity. Returns [] if no GitHub account is connected. Never auto-publishes."
+            "description": "Stores the GitHub token and turns selected repos into projects the user is allocated to."
           }
         }
       ]
     },
     {
       "name": "Worklog Drafts",
-      "description": "Api::V1::WorklogDraftsController — review and accept pending drafts.",
       "item": [
+        {
+          "name": "Compose (Auto Draft from PR)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"date\": \"2026-06-08\",\n  \"hours\": 8\n}" },
+            "url": {
+              "raw": "{{base_url}}/api/v1/projects/{{project_id}}/worklogs/compose",
+              "host": ["{{base_url}}"], "path": ["api", "v1", "projects", "{{project_id}}", "worklogs", "compose"]
+            },
+            "description": "Composes a draft for the given date from the user's GitHub activity in this project's repos."
+          }
+        },
         {
           "name": "List Drafts",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "X-User-Id", "value": "{{user_id}}" }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/api/v1/worklog_drafts",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "worklog_drafts"]
-            },
-            "description": "Lists the current user's pending (suggested) drafts."
+              "host": ["{{base_url}}"], "path": ["api", "v1", "worklog_drafts"]
+            }
           }
         },
         {
           "name": "Accept Draft",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "X-User-Id", "value": "{{user_id}}" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": {
               "raw": "{{base_url}}/api/v1/worklog_drafts/{{draft_id}}/accept",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "worklog_drafts", "{{draft_id}}", "accept"]
-            },
-            "description": "Promotes draft {{draft_id}} into a real worklog and marks it accepted. 201 on success; 404 if the draft isn't the current user's. Set the draft_id collection variable first."
+              "host": ["{{base_url}}"], "path": ["api", "v1", "worklog_drafts", "{{draft_id}}", "accept"]
+            }
           }
         }
       ]
@@ -155,14 +134,10 @@
         {
           "name": "Health Check",
           "request": {
+            "auth": { "type": "noauth" },
             "method": "GET",
             "header": [],
-            "url": {
-              "raw": "{{base_url}}/up",
-              "host": ["{{base_url}}"],
-              "path": ["up"]
-            },
-            "description": "Rails health endpoint — 200 if the app booted."
+            "url": { "raw": "{{base_url}}/up", "host": ["{{base_url}}"], "path": ["up"] }
           }
         }
       ]
