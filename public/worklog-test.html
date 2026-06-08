@@ -79,9 +79,6 @@
 
       <div id="githubStep" style="display:none;">
         <div id="tokenBlocks"></div>
-        <div class="row" style="margin-top:12px;">
-          <button class="btn btn-light" id="addTokenBtn">+ Add another token</button>
-        </div>
         <div class="right">
           <button class="btn btn-dark" id="submitBtn">Submit</button>
         </div>
@@ -98,7 +95,6 @@
     $("autoLogBtn").onclick = () => $("overlay").classList.add("show");
     $("closeBtn").onclick = () => $("overlay").classList.remove("show");
     $("githubOption").onclick = () => { $("providerStep").style.display = "none"; $("githubStep").style.display = "block"; addTokenBlock(); };
-    $("addTokenBtn").onclick = () => addTokenBlock();
 
     let blockSeq = 0;
     function addTokenBlock() {
@@ -110,14 +106,12 @@
         <div class="row">
           <input type="text" id="tok-${id}" placeholder="Enter your github token here..." />
           <button class="btn btn-blue" data-act="verify">Verify Token</button>
-          <button class="btn btn-light" data-act="add">Add</button>
         </div>
         <div class="msg" data-role="msg"></div>
         <div data-role="repos"></div>`;
       $("tokenBlocks").appendChild(wrap);
 
       wrap.querySelector('[data-act="verify"]').onclick = () => verifyToken(wrap, $("tok-" + id));
-      wrap.querySelector('[data-act="add"]').onclick = () => addTokenBlock();
     }
 
     async function verifyToken(wrap, input) {
