@@ -19,7 +19,7 @@ module Worklogs
       preamble, no headings, no closing commentary.
     PROMPT
 
-    def self.call(group:, hours: 8, style_samples: [], rough_notes: nil, llm: Llm::Client.new)
+    def self.call(group:, hours: 8, style_samples: [], rough_notes: nil, llm: Llm.default)
       new(group:, hours:, style_samples:, rough_notes:, llm:).call
     end
 
