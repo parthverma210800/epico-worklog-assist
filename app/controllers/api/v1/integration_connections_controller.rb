@@ -30,6 +30,15 @@ module Api
         render_data(serialize(connection), status: :created)
       end
 
+      # POST /api/v1/integrations/github/verify  body: { access_token }
+      # Validates a GitHub token (without storing it) and lists the repos it can see.
+      def verify
+        client = Integrations::Github::Client.new(token: params.require(:access_token))
+        render_data({ valid: true, login: client.login, repos: client.repositories })
+      rescue Integrations::Github::Client::AuthError
+        render_error(code: "invalid_token", message: "Github token invalid", status: :unprocessable_entity)
+      end
+
       # DELETE /api/v1/integrations/:provider
       def destroy
         current_user.integration_connections.find_by!(provider: params[:provider]).destroy!

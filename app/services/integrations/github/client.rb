@@ -33,6 +33,14 @@ module Integrations
         @login ||= get_json("/user").fetch("login")
       end
 
+      # Repos the token can see (owner + collaborator + org member), most-recently
+      # updated first. Used by the connect UI to let the user pick repos.
+      def repositories
+        get_json("/user/repos", per_page: 100, sort: "updated",
+                                affiliation: "owner,collaborator,organization_member")
+          .map { |repo| repo["full_name"] }
+      end
+
       # PRs the user authored in a date range (used by the branch-aware fetch).
       def pull_requests(from:, to:)
         search_pull_requests(login, from, to)

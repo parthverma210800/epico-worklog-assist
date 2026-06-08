@@ -15,7 +15,9 @@ Rails.application.routes.draw do
 
       get "integrations", to: "integration_connections#index"
       post "integrations", to: "integration_connections#create"
+      post "integrations/github/verify", to: "integration_connections#verify"
       delete "integrations/:provider", to: "integration_connections#destroy"
+      post "github/setup", to: "github_setup#create"
     end
   end
 end
