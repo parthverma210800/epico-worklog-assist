@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Worklog — Local Test UI</title>
+  <style>
+    :root { --blue:#2563eb; --green:#16a34a; --red:#dc2626; --border:#d1d5db; --muted:#6b7280; }
+    * { box-sizing: border-box; }
+    body { font-family: Inter, system-ui, Arial, sans-serif; background:#f3f4f6; margin:0; padding:32px; color:#111827; }
+    .card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:20px 22px; max-width:560px; margin:0 auto; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+    h2 { margin:0 0 4px; font-size:18px; }
+    .sub { color:var(--muted); font-size:13px; margin-bottom:18px; }
+    label { display:block; font-size:13px; font-weight:600; margin:12px 0 5px; }
+    input[type=text], input[type=number], input[type=date], textarea {
+      width:100%; padding:9px 11px; border:1px solid var(--border); border-radius:8px; font-size:14px; }
+    textarea { min-height:84px; resize:vertical; }
+    .row { display:flex; gap:8px; align-items:center; }
+    .btn { border:none; border-radius:8px; padding:9px 14px; font-size:13px; font-weight:600; cursor:pointer; }
+    .btn-blue { background:var(--blue); color:#fff; }
+    .btn-light { background:#eef2ff; color:#3730a3; }
+    .btn-dark { background:#111827; color:#fff; }
+    .btn-ghost { background:#f9fafb; border:1px solid var(--border); color:#111827; }
+    .right { display:flex; justify-content:flex-end; margin-top:18px; }
+    .msg { font-size:13px; margin-top:7px; }
+    .msg.err { color:var(--red); }
+    .msg.ok { color:var(--green); }
+    .repo { display:flex; align-items:center; gap:9px; padding:7px 10px; border:1px solid var(--border); border-radius:8px; margin-top:6px; font-size:13px; }
+    .overlay { position:fixed; inset:0; background:rgba(17,24,39,.45); display:none; align-items:flex-start; justify-content:center; padding-top:48px; }
+    .overlay.show { display:flex; }
+    .dialog { background:#fff; border-radius:12px; padding:20px 22px; width:520px; max-height:80vh; overflow:auto; box-shadow:0 10px 40px rgba(0,0,0,.2); }
+    .dialog-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+    .x { border:none; background:none; font-size:20px; cursor:pointer; color:var(--muted); }
+    .source { background:#eef2ff; color:#3730a3; border-radius:6px; padding:1px 7px; font-size:11px; }
+    .token-block { border:1px solid var(--border); border-radius:10px; padding:12px; margin-top:12px; }
+    .userid { width:70px; }
+    small.note { color:var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Add Worklog</h2>
+    <div class="sub">Local test UI · talks to the prototype API on this origin</div>
+
+    <div class="row" style="justify-content:flex-end;">
+      <label style="margin:0;">User ID</label>
+      <input class="userid" id="userId" type="number" value="7" />
+    </div>
+
+    <label>Select date for work log *</label>
+    <input id="date" type="date" />
+
+    <label>Hours *</label>
+    <input id="hours" type="number" value="8" min="0" max="24" />
+
+    <label>Description *</label>
+    <textarea id="description" placeholder="Enter description..."></textarea>
+
+    <div class="row" style="margin-top:16px;">
+      <button class="btn btn-light" id="autoLogBtn">✨ Auto Log Hours</button>
+      <button class="btn btn-ghost">⚡ Rewrite with AI</button>
+    </div>
+  </div>
+
+  <!-- Auto Log Hours dialog -->
+  <div class="overlay" id="overlay">
+    <div class="dialog">
+      <div class="dialog-head">
+        <strong>Auto Log Hours</strong>
+        <button class="x" id="closeBtn">&times;</button>
+      </div>
+
+      <div id="providerStep">
+        <small class="note">Choose a source to auto-log from:</small>
+        <div style="margin-top:10px;">
+          <button class="btn btn-ghost" id="githubOption">🐙 GitHub</button>
+        </div>
+      </div>
+
+      <div id="githubStep" style="display:none;">
+        <div id="tokenBlocks"></div>
+        <div class="row" style="margin-top:12px;">
+          <button class="btn btn-light" id="addTokenBtn">+ Add another token</button>
+        </div>
+        <div class="right">
+          <button class="btn btn-dark" id="submitBtn">Submit</button>
+        </div>
+        <div class="msg" id="submitMsg"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    $("date").value = new Date().toISOString().slice(0, 10);
+    const headers = () => ({ "Content-Type": "application/json", "X-User-Id": $("userId").value });
+
+    $("autoLogBtn").onclick = () => $("overlay").classList.add("show");
+    $("closeBtn").onclick = () => $("overlay").classList.remove("show");
+    $("githubOption").onclick = () => { $("providerStep").style.display = "none"; $("githubStep").style.display = "block"; addTokenBlock(); };
+    $("addTokenBtn").onclick = () => addTokenBlock();
+
+    let blockSeq = 0;
+    function addTokenBlock() {
+      const id = ++blockSeq;
+      const wrap = document.createElement("div");
+      wrap.className = "token-block";
+      wrap.dataset.token = "";
+      wrap.innerHTML = `
+        <div class="row">
+          <input type="text" id="tok-${id}" placeholder="Enter your github token here..." />
+          <button class="btn btn-blue" data-act="verify">Verify Token</button>
+          <button class="btn btn-light" data-act="add">Add</button>
+        </div>
+        <div class="msg" data-role="msg"></div>
+        <div data-role="repos"></div>`;
+      $("tokenBlocks").appendChild(wrap);
+
+      wrap.querySelector('[data-act="verify"]').onclick = () => verifyToken(wrap, $("tok-" + id));
+      wrap.querySelector('[data-act="add"]').onclick = () => addTokenBlock();
+    }
+
+    async function verifyToken(wrap, input) {
+      const msg = wrap.querySelector('[data-role="msg"]');
+      const reposEl = wrap.querySelector('[data-role="repos"]');
+      reposEl.innerHTML = ""; msg.textContent = "Verifying…"; msg.className = "msg";
+      try {
+        const res = await fetch("/api/v1/integrations/github/verify", {
+          method: "POST", headers: headers(), body: JSON.stringify({ access_token: input.value }),
+        });
+        const json = await res.json();
+        if (!res.ok) { msg.textContent = (json.error && json.error.message) || "Github token invalid"; msg.className = "msg err"; return; }
+        wrap.dataset.token = input.value;
+        msg.textContent = `Github token validated successfully (as ${json.data.login})`; msg.className = "msg ok";
+        json.data.repos.forEach((repo) => {
+          const row = document.createElement("label");
+          row.className = "repo";
+          row.innerHTML = `<input type="checkbox" value="${repo}" /> <span>${repo}</span>`;
+          reposEl.appendChild(row);
+        });
+        if (!json.data.repos.length) reposEl.innerHTML = '<small class="note">No repos found for this token.</small>';
+      } catch (e) { msg.textContent = "Request failed: " + e.message; msg.className = "msg err"; }
+    }
+
+    $("submitBtn").onclick = async () => {
+      const out = $("submitMsg"); out.textContent = "Submitting…"; out.className = "msg";
+      const results = [];
+      for (const wrap of document.querySelectorAll(".token-block")) {
+        const token = wrap.dataset.token;
+        const repos = [...wrap.querySelectorAll('input[type=checkbox]:checked')].map((c) => c.value);
+        if (!token || !repos.length) continue;
+        const res = await fetch("/api/v1/github/setup", {
+          method: "POST", headers: headers(), body: JSON.stringify({ access_token: token, repos }),
+        });
+        const json = await res.json();
+        if (res.ok) results.push(...json.data.map((p) => p.name));
+      }
+      out.className = "msg ok";
+      out.textContent = results.length
+        ? `Done — created/allocated projects: ${results.join(", ")}`
+        : "Nothing submitted — verify a token and check at least one repo.";
+    };
+  </script>
+</body>
+</html>
