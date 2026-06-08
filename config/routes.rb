@@ -10,7 +10,6 @@ Rails.application.routes.draw do
       resources :worklog_drafts, only: :index do
         member { post :accept }
       end
-      post "worklogs/auto_draft", to: "auto_drafts#create"
       post "projects/:project_id/worklogs/compose", to: "project_worklogs#compose"
 
       get "integrations", to: "integration_connections#index"

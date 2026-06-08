@@ -14,8 +14,3 @@
 # ActiveSupport::Inflector.inflections(:en) do |inflect|
 #   inflect.acronym "RESTful"
 # end
-
-# "leave" (time off) singularizes to "leaf" by default; pin it so Leave <-> leaves.
-ActiveSupport::Inflector.inflections(:en) do |inflect|
-  inflect.irregular "leave", "leaves"
-end

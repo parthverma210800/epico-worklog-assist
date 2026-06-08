@@ -1,12 +1,12 @@
 # Seed data for the Smart Worklog Assist prototype.
-# One engineer allocated 8h/day to "Mocingbird", a few filled worklogs (Jun 1-4),
-# then missing days, one approved leave, and one holiday for June 2026.
+# One engineer allocated 8h/day to "Mocingbird" with a few filled worklogs (Jun 1-4).
+# Leave/holiday classification is Epico's responsibility, not this feature's.
 # Idempotent: clears and recreates.
 #
 # Run with: bin/rails db:seed
 
 puts "Clearing existing data..."
-[WorklogDraft, Worklog, ProjectRepository, ProjectAllocation, Leave, Holiday,
+[WorklogDraft, Worklog, ProjectRepository, ProjectAllocation,
  IntegrationConnection].each(&:delete_all)
 User.delete_all
 Project.delete_all
@@ -41,11 +41,7 @@ puts "Creating existing worklogs (Jun 1-4, 2026)..."
 }.each do |date, description|
   Worklog.create!(user: employee1, project: mocingbird, work_date: date, description: description, hours: 8)
 end
-# Jun 5 (Fri) intentionally left missing, plus Jun 8-10, etc.
+# Jun 5 onward intentionally left unlogged (drafted via Auto Draft from PR).
 
-puts "Creating an approved leave (Jun 11) and a holiday (Jun 15)..."
-Leave.create!(user: employee1, leave_date: Date.new(2026, 6, 11), leave_type: "full_day", status: "approved")
-Holiday.create!(holiday_date: Date.new(2026, 6, 15), name: "Company Foundation Day")
-
-puts "Done. Users=#{User.count} Projects=#{Project.count} Worklogs=#{Worklog.count} " \
-     "Leaves=#{Leave.count} Holidays=#{Holiday.count} Repos=#{ProjectRepository.count}"
+puts "Done. Users=#{User.count} Projects=#{Project.count} " \
+     "Worklogs=#{Worklog.count} Repos=#{ProjectRepository.count}"

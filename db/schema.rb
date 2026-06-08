@@ -10,17 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_07_112538) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_08_185155) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
-
-  create_table "holidays", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.date "holiday_date", null: false
-    t.string "name", null: false
-    t.datetime "updated_at", null: false
-    t.index ["holiday_date"], name: "index_holidays_on_holiday_date", unique: true
-  end
 
   create_table "integration_connections", force: :cascade do |t|
     t.text "access_token"
@@ -33,17 +25,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_07_112538) do
     t.bigint "user_id", null: false
     t.index ["user_id", "provider"], name: "index_integration_connections_on_user_id_and_provider", unique: true
     t.index ["user_id"], name: "index_integration_connections_on_user_id"
-  end
-
-  create_table "leaves", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.date "leave_date", null: false
-    t.string "leave_type", default: "full_day", null: false
-    t.string "status", default: "approved", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "user_id", null: false
-    t.index ["user_id", "leave_date"], name: "index_leaves_on_user_id_and_leave_date"
-    t.index ["user_id"], name: "index_leaves_on_user_id"
   end
 
   create_table "project_allocations", force: :cascade do |t|
@@ -121,7 +102,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_07_112538) do
   end
 
   add_foreign_key "integration_connections", "users"
-  add_foreign_key "leaves", "users"
   add_foreign_key "project_allocations", "projects"
   add_foreign_key "project_allocations", "users"
   add_foreign_key "project_repositories", "projects"
