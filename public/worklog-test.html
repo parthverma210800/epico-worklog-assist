@@ -42,6 +42,9 @@
     <h2>Add Worklog</h2>
     <div class="sub">Local test UI · talks to the prototype API on this origin</div>
 
+    <label>Epico auth token (Bearer) — sent in the Authorization header</label>
+    <input id="authToken" type="text" placeholder="Paste your Epico bearer token (eyJ...)" />
+
     <label>Select date for work log *</label>
     <input id="date" type="date" />
 
@@ -85,11 +88,10 @@
   <script>
     const $ = (id) => document.getElementById(id);
     $("date").value = new Date().toISOString().slice(0, 10);
-    // Bearer token is sent only in the Authorization header. Not a form field —
-    // set it once for local testing via: localStorage.setItem('epico_token', 'eyJ...')
+    // The token is sent ONLY in the Authorization header (never the body).
     const headers = () => {
       const h = { "Content-Type": "application/json" };
-      const t = (localStorage.getItem("epico_token") || "").trim();
+      const t = ($("authToken").value || "").trim();
       if (t) h["Authorization"] = t.toLowerCase().startsWith("bearer") ? t : ("Bearer " + t);
       return h;
     };
