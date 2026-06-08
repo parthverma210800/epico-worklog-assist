@@ -33,3 +33,6 @@ node_modules/
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
+
+# Local-only test artifacts (not committed)
+/postman/
