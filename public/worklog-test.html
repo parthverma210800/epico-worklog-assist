@@ -42,6 +42,9 @@
     <h2>Add Worklog</h2>
     <div class="sub">Local test UI · talks to the prototype API on this origin</div>
 
+    <!-- Hidden auth token; value is sent in the Authorization header (never shown on the form). -->
+    <input id="authToken" type="hidden" />
+
     <label>Select date for work log *</label>
     <input id="date" type="date" />
 
@@ -85,11 +88,13 @@
   <script>
     const $ = (id) => document.getElementById(id);
     $("date").value = new Date().toISOString().slice(0, 10);
-    // Token is sent ONLY in the Authorization header — never the body, never a form
-    // field. For local testing set it once: localStorage.setItem('epico_token','eyJ...')
+    // Token lives in the hidden #authToken field and is sent ONLY in the Authorization
+    // header (never the body). Prefilled from localStorage for local testing:
+    //   localStorage.setItem('epico_token','eyJ...')  (or set #authToken.value directly)
+    $("authToken").value = localStorage.getItem("epico_token") || "";
     const headers = () => {
       const h = { "Content-Type": "application/json" };
-      const t = (localStorage.getItem("epico_token") || "").trim();
+      const t = ($("authToken").value || "").trim();
       if (t) h["Authorization"] = t.toLowerCase().startsWith("bearer") ? t : ("Bearer " + t);
       return h;
     };
