@@ -33,6 +33,35 @@ module Integrations
         @login ||= get_json("/user").fetch("login")
       end
 
+      # Branch names in a repo (newest API page; up to 100).
+      #   branches("org/epp") => [{name:, sha:}, ...]
+      def branches(repo)
+        get_json("/repos/#{repo}/branches", per_page: 100).map do |b|
+          { name: b["name"], sha: b.dig("commit", "sha") }
+        end
+      end
+
+      # Commits authored by `author` on `branch` of `repo` during a single day,
+      # tagged with the branch so the story can be derived from the branch name.
+      def commits_on(repo:, branch:, author:, date:)
+        get_json(
+          "/repos/#{repo}/commits",
+          sha: branch, author: author,
+          since: "#{date.iso8601}T00:00:00Z", until: "#{date.iso8601}T23:59:59Z",
+          per_page: 100
+        ).map do |item|
+          Activity.new(
+            kind: :commit,
+            repo: repo,
+            ref: "commit:#{item['sha'].to_s[0, 7]}",
+            title: item.dig("commit", "message").to_s.lines.first&.strip,
+            occurred_on: date,
+            url: item["html_url"],
+            branch: branch
+          )
+        end
+      end
+
       private
 
       def search_pull_requests(author, from, to)
