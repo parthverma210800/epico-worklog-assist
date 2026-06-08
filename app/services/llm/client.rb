@@ -11,6 +11,10 @@ module Llm
     DEFAULT_MODEL = :"claude-opus-4-8"
     DEFAULT_MAX_TOKENS = 2_000
 
+    # Raised when the LLM call fails (missing/invalid key, rate limit, outage),
+    # so callers can return a clean error instead of a 500.
+    class Error < StandardError; end
+
     def initialize(model: DEFAULT_MODEL, api_key: ENV["ANTHROPIC_API_KEY"])
       @model = model
       @api_key = api_key
@@ -29,6 +33,8 @@ module Llm
              .map(&:text)
              .join("\n")
              .strip
+    rescue Anthropic::Errors::Error => e
+      raise Error, "LLM request failed: #{e.message}"
     end
 
     private

@@ -3,6 +3,7 @@ class ApplicationController < ActionController::API
   rescue_from ActiveRecord::RecordInvalid, with: :render_unprocessable
   rescue_from ActionController::ParameterMissing, with: :render_bad_request
   rescue_from ActionController::BadRequest, with: :render_bad_request
+  rescue_from Llm::Client::Error, with: :render_ai_unavailable
 
   private
 
@@ -28,6 +29,10 @@ class ApplicationController < ActionController::API
 
   def render_bad_request(error)
     render_error(code: "bad_request", message: error.message, status: :bad_request)
+  end
+
+  def render_ai_unavailable(error)
+    render_error(code: "ai_unavailable", message: error.message, status: :bad_gateway)
   end
 
   def render_unprocessable(error)
