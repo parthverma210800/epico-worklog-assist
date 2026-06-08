@@ -33,6 +33,11 @@ module Integrations
         @login ||= get_json("/user").fetch("login")
       end
 
+      # PRs the user authored in a date range (used by the branch-aware fetch).
+      def pull_requests(from:, to:)
+        search_pull_requests(login, from, to)
+      end
+
       # Branch names in a repo (newest API page; up to 100).
       #   branches("org/epp") => [{name:, sha:}, ...]
       def branches(repo)
