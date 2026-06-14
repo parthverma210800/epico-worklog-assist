@@ -49,4 +49,4 @@ group :development, :test do
   gem "rubocop-rails-omakase", require: false
 end
 
-gem "anthropic", "~> 1.46"
+gem "anthropic", "~> 1.48"
